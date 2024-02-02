@@ -1,10 +1,11 @@
 # scicloj/scicloj.ml.tribuo
 
-ntegration of tribuo ML library into the scicloj.ml / metamorh farmework.
+Integration of [tribuo](https://tribuo.org) ML library into the scicloj.ml / metamorph framework.
 
 ## Usage
 
-FIXME: write usage documentation!
+All models of tribuo are supported out of the box, via a configuration map. See tribuo website for details.
+
 
 ``` clojure
 (require '[scicloj.ml.tribuo]
