@@ -54,11 +54,11 @@ the same as above , using a metamorh pipeline which can encapsulate the state (=
 
 ## build and deploy
 
-Run the project's tests (they'll fail until you edit them):
+Run the project's tests 
 
     $ clojure -T:build test
 
-Run the project's CI pipeline and build a JAR (this will fail until you edit the tests to pass):
+Run the project's CI pipeline and build a JAR: 
 
     $ clojure -T:build ci
 
