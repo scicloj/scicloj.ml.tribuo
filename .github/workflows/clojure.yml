@@ -60,6 +60,10 @@ jobs:
 
 
   build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+
      runs-on: ${{ matrix.os }}
 
      steps:
