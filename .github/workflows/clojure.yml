@@ -33,10 +33,7 @@ jobs:
           cli: 1.11.1.1435             # Clojure CLI based on tools.deps
           clj-kondo: 2022.05.31        # Clj-kondo
           cljfmt: 0.10.2               # cljfmt
-          cljstyle: 0.15.0             # cljstyle
-          cmd-exe-workaround: 'latest' # Replaces `clojure` with `deps.clj` on Windows
-          zprint: 1.2.3                # zprint
-          
+
       # Optional step:
       - name: Cache clojure dependencies
         uses: actions/cache@v3
@@ -61,14 +58,7 @@ jobs:
       - name: Get cljfmt version
         run: cljfmt --version
 
-      - name: Get cljstyle version
-        # cljstyle is not yet available for windows
-        if: ${{ matrix.os != 'windows-latest' }}
-        run: cljstyle version
 
-      - name: Get zprint version
-        run: zprint --version
-        
   build:
      runs-on: ${{ matrix.os }}
 
