@@ -15,6 +15,8 @@ All models of tribuo are supported out of the box, via a configuration map. See 
           '[tech.v3.dataset.modelling :as dsmod]
           '[scicloj.metamorph.ml.toydata :as data]
           )
+
+(def iris (data/iris-ds))
 (def split (dsmod/train-test-split iris ))
 (def model (ml/train (:train-ds split)
                         {:model-type :scicloj.ml.tribuo/classification
