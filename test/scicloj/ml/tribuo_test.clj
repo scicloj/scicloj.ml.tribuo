@@ -1,7 +1,6 @@
 (ns scicloj.ml.tribuo-test
-  (:require [scicloj.ml.tribuo :as sut]
+  (:require [scicloj.ml.tribuo]
             [scicloj.metamorph.ml :as ml]
-            [tech.v3.dataset :as ds]
             [tech.v3.dataset.modelling :as dsmod]
             [scicloj.metamorph.ml.toydata :as data]
             [clojure.test :as t]))
