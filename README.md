@@ -26,7 +26,7 @@ All models of tribuo are supported out of the box, via a configuration map. See 
 (def prediction (ml/predict (:test-ds split) model))
 ```
 
-the same as above , using metamorh pipeline which can encapsulate the state
+the same as above , using a metamorh pipeline which can encapsulate the state (= the trained model in this case)
 
 ``` clojure
 ;;  the same using metamorh pipelines
@@ -42,8 +42,8 @@ the same as above , using metamorh pipeline which can encapsulate the state
 
 ;;  no global variable needed, as state is in context
 (->> (mm/fit-pipe (:train-ds split) cart-pipeline)           ;train model
-     (mm/transform-pipe (:test-ds split) cart-pipeline)      ;make predictio  
-     :metamorph/data)
+     (mm/transform-pipe (:test-ds split) cart-pipeline)      ;make prediction  
+     :metamorph/data)                                        ;extract prediction from context
 
 ```
 
