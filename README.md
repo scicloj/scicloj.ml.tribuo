@@ -8,8 +8,8 @@ Integration of [tribuo](https://tribuo.org) ML library into the scicloj.ml / met
 
 All models of tribuo are supported out of the box, via a configuration map. See tribuo website for details.
 
-
-``` clojure
+Prepare data:
+```clojure
 (require '[scicloj.ml.tribuo]
           '[scicloj.metamorph.ml :as ml]
           '[tech.v3.dataset.modelling :as dsmod]
@@ -18,6 +18,11 @@ All models of tribuo are supported out of the box, via a configuration map. See 
 
 (def iris (data/iris-ds))
 (def split (dsmod/train-test-split iris ))
+
+```
+
+train / predict:
+``` clojure
 (def model (ml/train (:train-ds split)
                         {:model-type :scicloj.ml.tribuo/classification
                          :tribuo-components [{:name "trainer"
