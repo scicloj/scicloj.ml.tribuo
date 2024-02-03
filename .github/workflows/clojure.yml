@@ -61,7 +61,7 @@ jobs:
       - uses: actions/checkout@v3
           
       - name: Install dependencies
-        run: clj -P 
+        run: clojure -P
           
       - name: Run tests
-        run: clj -T:build ci
+        run: clojure -T:build ci
