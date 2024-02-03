@@ -23,6 +23,28 @@ All models of tribuo are supported out of the box, via a configuration map. See 
                          :tribuo-trainer-name "trainer"}))
 (def prediction (ml/predict (:test-ds split) model))
 ```
+
+the same as above , using metamorh pipeline which can encapsulate the state
+
+``` clojure
+;;  the same using metamorh pipelines
+
+(require '[scicloj.metamorph.core :as mm]')
+(def cart-pipeline
+  (mm/pipeline
+   (ml/model {:model-type :scicloj.ml.tribuo/classification
+              :tribuo-components [{:name "trainer"
+                                   :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
+              :tribuo-trainer-name "trainer"})))
+
+
+;;  no global variable needed, as state is in context
+(->> (mm/fit-pipe (:train-ds split) cart-pipeline)
+     (mm/transform-pipe (:test-ds split) cart-pipeline)
+     :metamorph/data)
+
+```
+
 ## build and deploy
 
 Run the project's tests (they'll fail until you edit them):
