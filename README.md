@@ -41,8 +41,8 @@ the same as above , using metamorh pipeline which can encapsulate the state
 
 
 ;;  no global variable needed, as state is in context
-(->> (mm/fit-pipe (:train-ds split) cart-pipeline)
-     (mm/transform-pipe (:test-ds split) cart-pipeline)
+(->> (mm/fit-pipe (:train-ds split) cart-pipeline)           ;train model
+     (mm/transform-pipe (:test-ds split) cart-pipeline)      ;make predictio  
      :metamorph/data)
 
 ```
