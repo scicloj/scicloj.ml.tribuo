@@ -1,3 +1,5 @@
+[![CI](https://github.com/scicloj/scicloj.ml.tribuo/actions/workflows/clojure.yml/badge.svg)](https://github.com/scicloj/scicloj.ml.tribuo/actions/workflows/clojure.yml)
+
 # scicloj/scicloj.ml.tribuo
 
 Integration of [tribuo](https://tribuo.org) ML library into the scicloj.ml / metamorph framework.
@@ -21,7 +23,7 @@ All models of tribuo are supported out of the box, via a configuration map. See 
                          :tribuo-trainer-name "trainer"}))
 (def prediction (ml/predict (:test-ds split) model))
 ```
-
+## build and deploy
 
 Run the project's tests (they'll fail until you edit them):
 
