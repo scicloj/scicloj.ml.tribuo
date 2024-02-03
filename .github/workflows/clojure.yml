@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
 
-  clojure:
+  ci:
 
     strategy:
       matrix:
@@ -58,15 +58,6 @@ jobs:
       - name: Get cljfmt version
         run: cljfmt --version
 
-
-  build:
-     strategy:
-      matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-
-     runs-on: ${{ matrix.os }}
-
-     steps:
       - uses: actions/checkout@v3
           
       - name: Install dependencies
