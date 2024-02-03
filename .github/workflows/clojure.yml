@@ -60,7 +60,7 @@ jobs:
 
 
   build:
-    strategy:
+     strategy:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
