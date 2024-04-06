@@ -20,7 +20,7 @@
   opts)
 
 (defn- pom-template [version]
-  [[:description "FIXME: my new library."]
+  [[:description "Integration of tribuo ML library into the scicloj.ml / metamorph framework."]
    [:url "https://github.com/scicloj/scicloj.ml.tribuo"]
    [:licenses
     [:license

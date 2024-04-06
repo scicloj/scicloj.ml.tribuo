@@ -1,29 +1,48 @@
 (ns scicloj.ml.tribuo-test
   (:require [scicloj.ml.tribuo]
             [scicloj.metamorph.ml :as ml]
+            [tech.v3.dataset :as ds]
             [tech.v3.dataset.modelling :as dsmod]
+            [tech.v3.dataset.categorical :as dscat]
             [scicloj.metamorph.ml.toydata :as data]
+            [tech.v3.dataset.column-filters :as ds-cf]
             [scicloj.metamorph.core :as mm]
 
             [clojure.test :as t]))
 
+(def simple-iris
+  (-> (data/iris-ds)
+      (dscat/reverse-map-categorical-xforms)
+      (ds/update-column :species (fn [col] (map str col)))
+      (dsmod/set-inference-target :species)))
+
+
 
 (t/deftest train
-  (let [iris (data/iris-ds)
+  (let [iris simple-iris
         split (dsmod/train-test-split iris {:seed 123})
 
         model (ml/train (:train-ds split)
                         {:model-type :scicloj.ml.tribuo/classification
                          :tribuo-components [{:name "trainer"
                                               :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
-                         :tribuo-trainer-name "trainer"})]
+                         :tribuo-trainer-name "trainer"})
+        predictions (->  (ml/predict (:test-ds split) model))]
+                         
+
+
 
     (t/is (= "1"
              (->
-              (ml/predict (:test-ds split) model)
-              :prediction
-              seq
+              predictions
+              (ds-cf/prediction)
+              ds/columns
+              first
               first)))))
+
+             
+
+
 
 
 
