@@ -8,8 +8,8 @@ Integration of [tribuo](https://tribuo.org) ML library into the scicloj.ml / met
 
 All models of tribuo are supported out of the box, via a configuration map. See tribuo website for details.
 
-
-``` clojure
+Prepare data:
+```clojure
 (require '[scicloj.ml.tribuo]
           '[scicloj.metamorph.ml :as ml]
           '[tech.v3.dataset.modelling :as dsmod]
@@ -18,6 +18,11 @@ All models of tribuo are supported out of the box, via a configuration map. See 
 
 (def iris (data/iris-ds))
 (def split (dsmod/train-test-split iris ))
+
+```
+
+train / predict:
+``` clojure
 (def model (ml/train (:train-ds split)
                         {:model-type :scicloj.ml.tribuo/classification
                          :tribuo-components [{:name "trainer"
@@ -26,7 +31,7 @@ All models of tribuo are supported out of the box, via a configuration map. See 
 (def prediction (ml/predict (:test-ds split) model))
 ```
 
-the same as above , using metamorh pipeline which can encapsulate the state
+the same as above , using a metamorh pipeline which can encapsulate the state (= the trained model in this case)
 
 ``` clojure
 ;;  the same using metamorh pipelines
@@ -42,18 +47,18 @@ the same as above , using metamorh pipeline which can encapsulate the state
 
 ;;  no global variable needed, as state is in context
 (->> (mm/fit-pipe (:train-ds split) cart-pipeline)           ;train model
-     (mm/transform-pipe (:test-ds split) cart-pipeline)      ;make predictio  
-     :metamorph/data)
+     (mm/transform-pipe (:test-ds split) cart-pipeline)      ;make prediction  
+     :metamorph/data)                                        ;extract prediction from context
 
 ```
 
 ## build and deploy
 
-Run the project's tests (they'll fail until you edit them):
+Run the project's tests 
 
     $ clojure -T:build test
 
-Run the project's CI pipeline and build a JAR (this will fail until you edit the tests to pass):
+Run the project's CI pipeline and build a JAR: 
 
     $ clojure -T:build ci
 
