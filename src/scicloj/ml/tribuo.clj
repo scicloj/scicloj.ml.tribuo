@@ -33,7 +33,6 @@
 
 
   (fn [feature-ds thawed-model {:keys [model-data target-columns] :as model}]
-    (def model model)
     (let [target-column-name (first target-columns)
           prediction
           (->
