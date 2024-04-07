@@ -41,9 +41,12 @@
               first)))))
 
 
-(t/deftest sonar-evaluate
-  (let [ds
-        (-> (data/sonar-ds))
+
+
+
+
+(defn- verify-evaluate [ds]
+  (let [
 
         make-pipefn (fn  [opts]
                       (mm/pipeline
@@ -52,6 +55,9 @@
                                   :tribuo-components [{:name "trainer"
                                                        :type "org.tribuo.classification.dtree.CARTClassificationTrainer"
                                                        :properties {:maxDepth "8"}}]
+
+
+
                                   :tribuo-trainer-name "trainer"})))
 
         splits
@@ -74,3 +80,9 @@
                   flatten
                   (map #(-> % :test-transform :metric))
                   first)))))
+
+
+
+(t/deftest sonar-evaluate-2
+  (verify-evaluate (-> (data/sonar-ds)
+                       (ds/categorical->number [:material]))))

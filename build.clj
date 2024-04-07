@@ -3,8 +3,8 @@
   (:require [clojure.tools.build.api :as b]
             [deps-deploy.deps-deploy :as dd]))
 
-(def lib 'net.clojars.scicloj/scicloj.ml.tribuo)
-(def version "0.1.0-SNAPSHOT")
+(def lib 'scicloj/scicloj.ml.tribuo)
+(def version "0.1.0")
 #_ ; alternatively, use MAJOR.MINOR.COMMITS:
 (def version (format "1.0.%s" (b/git-count-revs nil)))
 (def class-dir "target/classes")
@@ -28,7 +28,7 @@
      [:url "http://www.eclipse.org/legal/epl-v10.html"]]]
    [:developers
     [:developer
-     [:name "Carsten"]]]
+     [:name "Carsten Behring"]]]
    [:scm
     [:url "https://github.com/scicloj/scicloj.ml.tribuo"]
     [:connection "scm:git:https://github.com/scicloj/scicloj.ml.tribuo.git"]

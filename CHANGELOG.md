@@ -3,4 +3,6 @@ All notable changes to this project will be documented in this file. This change
 
 ## [Unreleased]
 - call prediction column prediction
-- use latest tehc.ml.dataset  
+- use latest tehc.ml.dataset
+- support :string and categorical target columns
+

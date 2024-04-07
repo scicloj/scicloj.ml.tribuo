@@ -3,11 +3,8 @@
   (:require
    [scicloj.metamorph.ml :as ml]
    [tech.v3.dataset :as ds]
+   [tech.v3.datatype :as dt]
    [tech.v3.datatype.errors :as errors]
-
-   [tech.v3.dataset.column-filters :as ds-cf]
-   [tech.v3.dataset.modelling :as ds-mod]
-
    [tech.v3.libs.tribuo :as tribuo]))
 
 (defn- make-trainer [options]
@@ -26,17 +23,25 @@
 (ml/define-model! :scicloj.ml.tribuo/classification
   (fn [feature-ds target-ds options]
 
+    (let [first-target-col (-> target-ds ds/columns first)
+          col-data-type (-> first-target-col meta :datatype)]
 
-    (errors/when-not-errorf (= :string (-> target-ds ds/columns first meta :datatype)) "only target column type :string is supported, target has type: %s" (-> target-ds ds/columns first meta :datatype))
+      (errors/when-not-errorf
+       (or (some? (:categorical-map (meta first-target-col)))
+           (= :string col-data-type))
+
+       "Can only handle categorical or :string target column. Target column meta: %s"
+       (meta first-target-col)))
     (tribuo/train-classification (make-trainer options) (ds/append-columns feature-ds (ds/columns target-ds))))
-
-
+    
 
   (fn [feature-ds thawed-model {:keys [model-data target-columns] :as model}]
+    (def model model)
     (let [target-column-name (first target-columns)
           prediction
           (->
-            (tribuo/predict-classification model-data feature-ds)
+           (tribuo/predict-classification model-data
+                                          feature-ds)
            (post-process-prediction target-column-name))]
       prediction))
   {})
