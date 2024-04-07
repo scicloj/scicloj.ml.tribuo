@@ -7,6 +7,8 @@
             [scicloj.metamorph.ml.toydata :as data]
             [tech.v3.dataset.column-filters :as ds-cf]
             [scicloj.metamorph.core :as mm]
+            [scicloj.metamorph.ml.loss :as loss]
+            [tablecloth.api :as tc]
 
             [clojure.test :as t]))
 
@@ -30,8 +32,6 @@
         predictions (->  (ml/predict (:test-ds split) model))]
                          
 
-
-
     (t/is (= "1"
              (->
               predictions
@@ -41,49 +41,36 @@
               first)))))
 
 
+(t/deftest sonar-evaluate
+  (let [ds
+        (-> (data/sonar-ds))
 
+        make-pipefn (fn  [opts]
+                      (mm/pipeline
+                       {:metamorph/id  :model}
+                       (ml/model {:model-type :scicloj.ml.tribuo/classification
+                                  :tribuo-components [{:name "trainer"
+                                                       :type "org.tribuo.classification.dtree.CARTClassificationTrainer"
+                                                       :properties {:maxDepth "8"}}]
+                                  :tribuo-trainer-name "trainer"})))
 
+        splits
+        (tc/split->seq ds :kfold {:seed 1234})
 
+        pipefns [(make-pipefn {})]
 
-
-
-
-
-(comment
-
-  (require '[scicloj.ml.tribuo]
-           '[scicloj.metamorph.ml :as ml]
-           '[tech.v3.dataset.modelling :as dsmod]
-           '[scicloj.metamorph.ml.toydata :as data]
-           '[scicloj.metamorph.core :as mm])
-
-
-  ;;
-  (def iris (data/iris-ds))
-  (def split (dsmod/train-test-split iris))
-  (def model (ml/train (:train-ds split)
-                       {:model-type :scicloj.ml.tribuo/classification
-                        :tribuo-components [{:name "trainer"
-                                             :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
-                        :tribuo-trainer-name "trainer"}))
-  (def prediction (ml/predict (:test-ds split) model))
-
-
-
-
-  ;;  the same using metamorh pipelies
-
-  (def cart-pipeline
-    (mm/pipeline
-     (ml/model {:model-type :scicloj.ml.tribuo/classification
-                :tribuo-components [{:name "trainer"
-                                     :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
-                :tribuo-trainer-name "trainer"})))
-
-
-  ;;  no global variable needed, as state is in context
-  (->> (mm/fit-pipe (:train-ds split) cart-pipeline)
-       (mm/transform-pipe (:test-ds split) cart-pipeline)
-       :metamorph/data)
-
-  :ok)
+        evaluations
+        (ml/evaluate-pipelines pipefns splits
+                               (fn [lhs rhs]
+                                 (loss/classification-accuracy lhs rhs))
+                               :accuracy
+                               {:return-best-crossvalidation-only true
+                                :return-best-pipeline-only true
+                                :evaluation-handler-fn
+                                (fn [eval-result]
+                                  eval-result)})]
+    (t/is (= 0.7804878048780488
+             (->> evaluations
+                  flatten
+                  (map #(-> % :test-transform :metric))
+                  first)))))
