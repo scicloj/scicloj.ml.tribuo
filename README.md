@@ -1,3 +1,4 @@
+[![Clojars Project](https://img.shields.io/clojars/v/org.scicloj/scicloj.ml.tribuo.svg)](https://clojars.org/org.scicloj/scicloj.ml.tribuo)
 [![CI](https://github.com/scicloj/scicloj.ml.tribuo/actions/workflows/clojure.yml/badge.svg)](https://github.com/scicloj/scicloj.ml.tribuo/actions/workflows/clojure.yml)
 
 # scicloj/scicloj.ml.tribuo
