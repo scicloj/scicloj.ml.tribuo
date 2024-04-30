@@ -28,7 +28,7 @@
       ]
     }
   },
-  "postAttachCommand": "/home/vscode/.setup-ide/setup-ide.sh",
+  "postAttachCommand": "/home/vscode/.setup-ide/setup-ide.sh"
   
   
 }
