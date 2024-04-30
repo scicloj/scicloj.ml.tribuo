@@ -24,6 +24,7 @@
       ]
     }
   },
-  "postCreateCommand": "if [ -e ~/.setup-ide/setup-ide.sh ]; then ~/.setup-ide/setup-ide.sh; fi"
+  "postAttachCommand": "/home/vscode/.setup-ide/setup-ide.sh"
   
 }
+ 
