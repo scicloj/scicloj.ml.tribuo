@@ -10,8 +10,8 @@
       "ppas": ["ppa:ubuntuhandbook1/emacs"],
       "packages": "emacs,rlwrap,fonts-hack"
     },
-    "ghcr.io/wxw-matt/devcontainer-features/script_runner:latest": {
-            "script1": "clojure_lsp#https://raw.githubusercontent.com/clojure-lsp/clojure-lsp/master/install"
+    "ghcr.io/wxw-matt/devcontainer-features/command_runner:latest": {
+            "command1": "bash < <(curl -s https://raw.githubusercontent.com/clojure-lsp/clojure-lsp/master/install)"
             
         }
   },
@@ -29,7 +29,7 @@
     }
   },
   "postAttachCommand": "/home/vscode/.setup-ide/setup-ide.sh",
-  "containerUser": "root"
+  
   
 }
  
