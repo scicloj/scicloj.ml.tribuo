@@ -8,7 +8,7 @@
     "ghcr.io/devcontainers/features/desktop-lite:1": {},
     "ghcr.io/devcontainers-contrib/features/apt-get-packages:1": {
       "ppas": ["ppa:ubuntuhandbook1/emacs"],
-      "packages": "emacs"
+      "packages": "emacs,rlwrap"
     }
   },
   "forwardPorts": [6080],
