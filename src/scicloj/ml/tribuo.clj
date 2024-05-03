@@ -95,7 +95,7 @@
 
 
     (ds/->dataset
-     {:regressor [ regressor-name]
+     {;; :regressor [ regressor-name]
       :r.squared [(.r2 evaluation regressor)]
       :mae [(.mae evaluation regressor)]
       :rmse [(.rmse evaluation regressor)]
