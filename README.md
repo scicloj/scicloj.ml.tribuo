@@ -1,6 +1,8 @@
 [![Clojars Project](https://img.shields.io/clojars/v/org.scicloj/scicloj.ml.tribuo.svg)](https://clojars.org/org.scicloj/scicloj.ml.tribuo)
 [![CI](https://github.com/scicloj/scicloj.ml.tribuo/actions/workflows/clojure.yml/badge.svg)](https://github.com/scicloj/scicloj.ml.tribuo/actions/workflows/clojure.yml)
 
+![ml logo](https://github.com/scicloj/graphic-design/blob/live/icons/scicloj.ml.svg)
+
 # scicloj/scicloj.ml.tribuo
 
 Integration of [tribuo](https://tribuo.org) ML library into the scicloj.ml / metamorph framework.
