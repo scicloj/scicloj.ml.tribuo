@@ -75,7 +75,7 @@
                                 :evaluation-handler-fn
                                 (fn [eval-result]
                                   eval-result)})]
-    (t/is (= 0.7804878048780488
+    (t/is (= 0.8048780487804879
              (->> evaluations
                   flatten
                   (map #(-> % :test-transform :metric))

@@ -1,11 +1,11 @@
 {:paths ["src" "resources"]
- :deps {org.clojure/clojure                     {:mvn/version "1.11.1"}
-        scicloj/metamorph.ml                    {:mvn/version "0.8.2"}
+ :deps {org.clojure/clojure                     {:mvn/version "1.12.0"}
+        org.scicloj/metamorph.ml                    {:mvn/version "0.9.0"}
         cheshire/cheshire                       {:mvn/version "5.12.0"}
         techascent/tech.ml.dataset              {:mvn/version "7.029"}
         ;; tribuo core deps
-        org.tribuo/tribuo-classification-core   {:mvn/version  "4.2.0"}
-        org.tribuo/tribuo-regression-core       {:mvn/version  "4.2.0"}
+        org.tribuo/tribuo-classification-core   {:mvn/version "4.3.1"}
+        org.tribuo/tribuo-regression-core       {:mvn/version "4.3.1"}
         com.oracle.labs.olcut/olcut-core        {:mvn/version "5.2.0"}
         com.oracle.labs.olcut/olcut-config-json {:mvn/version "5.2.0"}}
 
@@ -16,8 +16,8 @@
                 io.github.cognitect-labs/test-runner  {:git/tag "v0.5.1" :git/sha "dfb30dd"}
                 same/ish                              {:mvn/version "0.1.6"}
                 ;;  the unit tests needs this
-                org.tribuo/tribuo-regression-sgd      {:mvn/version "4.2.0"}
-                org.tribuo/tribuo-classification-tree {:mvn/version "4.2.0"}}}
+                org.tribuo/tribuo-regression-sgd      {:mvn/version "4.3.1"}
+                org.tribuo/tribuo-classification-tree {:mvn/version "4.3.1"}}}
 
 
   :build {:deps {io.github.clojure/tools.build

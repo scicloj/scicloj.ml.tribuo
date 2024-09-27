@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## unreleased
+
+## 0.1.3
+- use tribuo 4.3.1
+
 ## 0.1.2
 - unpack tribuo-all
 
