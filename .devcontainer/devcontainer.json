@@ -27,8 +27,7 @@
         "betterthantomorrow.calva"
       ]
     }
-  },
-  "postAttachCommand": "/home/vscode/.setup-ide/setup-ide.sh"
+  }
   
   
 }
