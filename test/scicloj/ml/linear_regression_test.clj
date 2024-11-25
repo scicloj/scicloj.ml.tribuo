@@ -1,9 +1,9 @@
 (ns scicloj.ml.linear-regression-test
   (:require
-   [clojure.test :as t]
-   [scicloj.ml.tribuo]
+   [clojure.test :as t :refer [is]]
    [scicloj.metamorph.ml :as ml]
    [scicloj.metamorph.ml.toydata :as toydata]
+   [scicloj.ml.tribuo]
    [tech.v3.dataset :as ds]))
 
 (def diabetes
@@ -25,7 +25,12 @@
                                                       :objective "squared"}}]
                    :tribuo-trainer-name "trainer"})]
 
-
+  
+    (is (= [{:disease-progression 163.65426518599335} {:disease-progression 113.19672792128675} {:disease-progression 156.74746391022254} {:disease-progression 151.2497638618952} {:disease-progression 139.5246990528341}]
+           (ds/rows
+            (ml/predict (ds/head diabetes) tribuo-linear-sdg))))
+    
+    
     (t/is (=
            (ds/rows
             (ml/glance tribuo-linear-sdg))

@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## unreleased
+- support "all types" for classification target column
 
 ## 0.1.3
 - use tribuo 4.3.1

@@ -9,30 +9,68 @@
             [scicloj.metamorph.core :as mm]
             [scicloj.metamorph.ml.loss :as loss]
             [tablecloth.api :as tc]
-
-            [clojure.test :as t]))
-
-(def simple-iris
-  (-> (data/iris-ds)
-      (dscat/reverse-map-categorical-xforms)
-      (ds/update-column :species (fn [col] (map str col)))
-      (dsmod/set-inference-target :species)))
+            [clojure.test :as t]
+            [tech.v3.dataset.categorical :as ds-cat]
+            [tech.v3.dataset.modelling :as ds-mod]
+            [tech.v3.dataset.categorical :as categorical]
+            [tech.v3.datatype :as dt]))
 
 
+(def iris-target-raw
+  (->>
+   (:species (data/iris-ds))
+   (map #(case %
+           0 :setosa
+           1 :versicolor
+           2 :virginica))))
 
-(t/deftest train
-  (let [iris simple-iris
-        split (dsmod/train-test-split iris {:seed 123})
+
+
+(defn make-species-column [datatype categorical?
+                           inference-target?
+                           species-key->val-map]
+  (let [
+        meta
+        {:categorical? categorical?
+         :name :species
+         :datatype datatype
+         :n-elems 150
+         :inference-target? inference-target?
+         }]
+    (ds/new-column :species (map species-key->val-map iris-target-raw) meta)))
+
+
+(defn make-iris-ds [species-column result-datatype]
+  
+  (->
+   (assoc (data/iris-ds) :species species-column)
+   ((fn [ds]
+      (if (some? result-datatype)
+        (ds/categorical->number ds [:species] [] result-datatype)
+        ds)))
+   
+   (ds-mod/set-inference-target :species)))
+
+(defn- validate [ds expected-target-val expected-accuracy]
+  (let [split (dsmod/train-test-split ds {:seed 123})
 
         model (ml/train (:train-ds split)
                         {:model-type :scicloj.ml.tribuo/classification
                          :tribuo-components [{:name "trainer"
                                               :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
                          :tribuo-trainer-name "trainer"})
-        predictions (->  (ml/predict (:test-ds split) model))]
-                         
+        predictions (->  (ml/predict (:test-ds split) model))
 
-    (t/is (= "1"
+        accuracy (loss/classification-accuracy (-> split :test-ds
+                                                   dscat/reverse-map-categorical-xforms
+                                                   :species)
+                                               (-> predictions
+                                                   dscat/reverse-map-categorical-xforms
+                                                   :species))]
+
+
+    (t/is (< expected-accuracy accuracy))
+    (t/is (= expected-target-val
              (->
               predictions
               (ds-cf/prediction)
@@ -40,15 +78,163 @@
               first
               first)))))
 
+(t/deftest validate-col-variants
+
+  (validate
+   (make-iris-ds
+    (make-species-column :int32
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa 0
+                          :versicolor 1
+                          :virginica 2})
+    nil)
+   1
+   0.94)
+  (validate
+   (make-iris-ds
+    (make-species-column :float32
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa 0.0
+                          :versicolor 1.0
+                          :virginica 2.0})
+    nil)
+   1.0
+   0.94)
+
+  (validate
+
+   (make-iris-ds
+    (make-species-column :int64
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa :setosa
+                          :versicolor :versicolor
+                          :virginica :virginica})
+    :float64)
+   0.0
+   0.94)
+
+  (validate
+   (make-iris-ds
+    (make-species-column :string
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa "0"
+                          :versicolor "1"
+                          :virginica "2"})
+    :float64)
+   1.0
+   0.94)
+
+  (validate
+   (make-iris-ds
+    (make-species-column :string
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa "0"
+                          :versicolor "1"
+                          :virginica "2"})
+    nil)
+   "1"
+   0.94)
+
+  (validate
+   (make-iris-ds
+    (make-species-column :string
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa "77"
+                          :versicolor "12"
+                          :virginica "2"})
+    nil)
+   "12"
+   0.94)
 
 
 
 
+  (validate
+   (make-iris-ds
+    (make-species-column :string
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa :setosa
+                          :versicolor :versicolor
+                          :virginica :virginica})
+    :int32)
+   0
+   0.94)
+
+  (validate
+   (make-iris-ds
+    (make-species-column :string
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa :setosa
+                          :versicolor :versicolor
+                          :virginica :virginica})
+    :float32)
+   0.0
+   0.94)
+
+  (validate
+   (make-iris-ds
+    (make-species-column :string
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa :setosa
+                          :versicolor :versicolor
+                          :virginica :virginica})
+    nil)
+   :versicolor
+   0.94)
+
+  (validate
+   (make-iris-ds
+    (make-species-column :string
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa "setosa"
+                          :versicolor "versicolor"
+                          :virginica "virginica"})
+    nil)
+   "versicolor"
+   0.94)
+
+  (validate
+   (make-iris-ds
+    (make-species-column :string
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa false
+                          :versicolor true
+                          :virginica true})
+    nil)
+   true
+   0.65))
+
+
+ (t/deftest not-supported 
+   (t/is (thrown? Exception
+        (validate
+         (make-iris-ds
+          (make-species-column :string
+                               true ;categorical?
+                               true ;inference-target? 
+                               {:setosa 1
+                                :versicolor "12"
+                                :virginica "a2a"})
+          nil)
+         "12"
+         0.94)))
+   )
+
+ (ds/new-column :x [:a :b :c])
 
 (defn- verify-evaluate [ds]
-  (let [
-
-        make-pipefn (fn  [opts]
+  (let [make-pipefn (fn  [opts]
                       (mm/pipeline
                        {:metamorph/id  :model}
                        (ml/model {:model-type :scicloj.ml.tribuo/classification
