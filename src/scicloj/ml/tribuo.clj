@@ -1,16 +1,16 @@
 (ns scicloj.ml.tribuo
   (:require
+   [fastmath.stats :as stats]
    [scicloj.metamorph.ml :as ml]
    [tech.v3.dataset :as ds]
    [tech.v3.dataset.modelling :as ds-mod]
    [tech.v3.datatype :as dt]
-   [tech.v3.datatype.functional :as fun]
-   [fastmath.stats :as stats]
    [tech.v3.datatype.errors :as errors]
-   [tech.v3.libs.tribuo :as tribuo]
-   [tablecloth.api :as tc])
-  (:import [org.tribuo.regression.evaluation RegressionEvaluator]
-          [org.tribuo.regression Regressor]))
+   [tech.v3.datatype.functional :as fun]
+   [tech.v3.libs.tribuo :as tribuo])
+  (:import
+   [org.tribuo.regression Regressor]
+   [org.tribuo.regression.evaluation RegressionEvaluator]))
 
 (defn- make-trainer [options]
   (tribuo/trainer (:tribuo-components options)
@@ -27,10 +27,10 @@
     (dt/cast revere-mapped-elemn target-datatype)))
 
 (defn- cast-target [prediction-ds column target-datatype target-categorical-maps]
-  (println :prediction--meta
-           (-> prediction-ds (tc/head) (get column) meta)
-           :data
-           (-> prediction-ds (tc/head) (get column) seq))
+  ;; (println :prediction--meta
+  ;;          (-> prediction-ds (tc/head) (get column) meta)
+  ;;          :data
+  ;;          (-> prediction-ds (tc/head) (get column) seq))
   (->
    (ds/update-column
     prediction-ds
@@ -55,42 +55,35 @@
 
 
 
-
-(ml/define-model! :scicloj.ml.tribuo/classification
-
-  (fn [feature-ds target-ds options]
-
+(defn- train-classification [feature-ds target-ds options]
     ;; (println :target-ts--meta
     ;;          (map meta (-> target-ds vals))
     ;;          :data
     ;;          (map #(take 5 %) (vals target-ds)))
+  (let [target-data-type (-> target-ds ds/columns first meta :datatype)]
+
+    (when (= :object target-data-type)
+      (errors/throwf ":object target column not supported"))
+
+    {:model-instance
+     (tribuo/train-classification (make-trainer options)
+                                  (ds/append-columns feature-ds (ds/columns target-ds)))}))
+
+(defn predict-classification [feature-ds thawed-model {:keys [model-data
+                                     target-columns
+                                     target-categorical-maps
+                                     target-datatypes] :as model}]
+
+  (let [model-instance (:model-instance model-data)
+        target-column-name (first target-columns)
+        prediction
+        (->
+         (tribuo/predict-classification model-instance
+                                        feature-ds)
+         (post-process-prediction-classification target-column-name target-datatypes target-categorical-maps))]
+    (ds/assoc-metadata prediction [target-column-name] :categorical-map (get target-categorical-maps target-column-name))))
 
 
-
-    (let [target-data-type (-> target-ds ds/columns first meta :datatype)]
-
-      (when (= :object target-data-type)
-        (errors/throwf ":object target column not supported"))
-
-      {:model-instance
-       (tribuo/train-classification (make-trainer options)
-                                    (ds/append-columns feature-ds (ds/columns target-ds)))}))
-
-
-  (fn [feature-ds thawed-model {:keys [model-data
-                                       target-columns
-                                       target-categorical-maps
-                                       target-datatypes] :as model}]
-
-    (let [model-instance (:model-instance model-data)
-          target-column-name (first target-columns)
-          prediction
-          (->
-           (tribuo/predict-classification model-instance
-                                          feature-ds)
-           (post-process-prediction-classification target-column-name target-datatypes target-categorical-maps))]
-      (ds/assoc-metadata prediction [target-column-name] :categorical-map (get target-categorical-maps target-column-name))))
-  {})
 
 
 (defn evaluate [model]
@@ -162,62 +155,37 @@
         (ds/add-column (ds/new-column :.resid residuos)))))
 
 
-(ml/define-model! :scicloj.ml.tribuo/regression
-  (fn [feature-ds target-ds options]
-    {:target-ds target-ds
-     :feature-ds feature-ds
-     :model
-     (tribuo/train-regression (make-trainer options) (ds/append-columns feature-ds (ds/columns target-ds)))})
+(defn- train-regression [feature-ds target-ds options]
+  {:target-ds target-ds
+   :feature-ds feature-ds
+   :model
+   (tribuo/train-regression (make-trainer options) (ds/append-columns feature-ds (ds/columns target-ds)))})
 
-  (fn [feature-ds thawed-model {:keys [model-data target-columns]}]
-    (let [model (:model model-data)]
-      (->
-       (tribuo/predict-regression model feature-ds)
-       (post-process-prediction-regression (first target-columns)))))
+(defn- predict-regression [feature-ds thawed-model {:keys [model-data target-columns]}]
+  (let [model (:model model-data)]
+    (->
+     (tribuo/predict-regression model feature-ds)
+     (post-process-prediction-regression (first target-columns)))))
+
+(ml/define-model! :scicloj.ml.tribuo/regression
+  train-regression
+  predict-regression
   {:glance-fn glance-fn-regression
    :augment-fn augment-fn-regression})
 
 
-(comment
+(ml/define-model! :scicloj.ml.tribuo/classification
+  train-classification
+  predict-classification
+  {})
 
-  (import '[com.oracle.labs.mlrg.olcut.config DescribeConfigurable]
-          '[com.oracle.labs.mlrg.olcut.config Configurable]
-          '[org.tribuo.regression.sgd.linear LinearSGDTrainer])
+(ml/define-model! :scicloj.ml.tribuo/classification
+  train-classification
+  predict-classification
+  {})
 
 
-  (defn configurable->docu [class]
-    (->>
-     (DescribeConfigurable/generateFieldInfo class)
-     vals
-     (map (fn [field-info]
-            (def field-info field-info)
-            (map :name
-                 (:members (clojure.reflect/reflect field-info)))
-            {:name  (.name field-info)
-             :description (.description field-info)
-             :type (.getGenericType (.field field-info))
-             :default (.defaultVal field-info)}))))
+;(model-info/register-models train-classification predict-classification train-regression predict-regression)
 
-  (def tribuo-trainers
-    ["org.tribuo.regression.liblinear.LibLinearRegressionTrainer"
-     "org.tribuo.regression.liblinear.LinearRegressionType"
-     "org.tribuo.classification.ensemble.AdaBoostTrainer"
-     "org.tribuo.classification.dtree.CARTClassificationTrainer"])
-  
 
-  (defn safe-class-for-name [s]
-    (try
-      (Class/forName s)
-      (catch Exception e nil)))
-  
-
-  (def trainer-classes
-    (->>
-     (map safe-class-for-name tribuo-trainers)
-     (remove nil?)))
-
-  (map
-   configurable->docu
-   trainer-classes)
-  )
 

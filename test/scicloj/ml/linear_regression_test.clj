@@ -11,19 +11,21 @@
   (toydata/diabetes-ds))
 
 
+
+
 (t/deftest tidy
   (let [tribuo-linear-sdg
-        (ml/train diabetes
-                  {:model-type :scicloj.ml.tribuo/regression
-                   :tribuo-components [{:name "squared"
-                                        :type "org.tribuo.regression.sgd.objectives.SquaredLoss"}
-                                       {:name "trainer"
-                                        :type "org.tribuo.regression.sgd.linear.LinearSGDTrainer"
-                                        :properties  {
-                                                      :epochs "100"
-                                                      :minibatchSize "1"
-                                                      :objective "squared"}}]
-                   :tribuo-trainer-name "trainer"})]
+        (ml/train
+         diabetes
+         {:model-type :scicloj.ml.tribuo/regression
+          :tribuo-components [{:name "squared"
+                               :type "org.tribuo.regression.sgd.objectives.SquaredLoss"}
+                              {:name "trainer"
+                               :type "org.tribuo.regression.sgd.linear.LinearSGDTrainer"
+                               :properties  {:epochs "100"
+                                             :minibatchSize "1"
+                                             :objective "squared"}}]
+          :tribuo-trainer-name "trainer"})]
 
   
     (is (= [{:disease-progression 163.65426518599335} {:disease-progression 113.19672792128675} {:disease-progression 156.74746391022254} {:disease-progression 151.2497638618952} {:disease-progression 139.5246990528341}]
@@ -53,3 +55,26 @@
             (ml/augment diabetes)
             (ds/head 10)
             (ds/rows))))))
+
+
+
+(comment
+
+  (ml/train
+   diabetes
+   {:model-type :scicloj.ml.tribuo/regression.linear-sgd
+  ;; trainer options
+    :epochs 100
+    :minibatchSize 1})
+
+
+  (ml/train
+   diabetes
+   {:model-type   :scicloj.ml.tribuo/regression.linear-sgd
+  ;; train options
+    :epochs 100
+    :minibatchSize 1
+    :objective "squared"
+  ;; other components and maybe options
+    :tribuo-components [{:name "squared"
+                         :type "org.tribuo.regression.sgd.objectives.SquaredLoss"}]}))

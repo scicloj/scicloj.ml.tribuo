@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file. This change
 
 ## unreleased
 - support "all types" for classification target column
+- added partial support for register individual models
 
 ## 0.1.3
 - use tribuo 4.3.1
