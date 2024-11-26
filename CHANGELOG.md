@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## unreleased
+
+## 0.1.4
 - support "all types" for classification target column
 - added partial support for register individual models
 
