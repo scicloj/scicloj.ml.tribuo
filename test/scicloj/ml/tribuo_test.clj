@@ -1,20 +1,16 @@
 (ns scicloj.ml.tribuo-test
-  (:require [scicloj.ml.tribuo]
-            [scicloj.metamorph.ml :as ml]
-            [tech.v3.dataset :as ds]
-            [tech.v3.dataset.modelling :as dsmod]
-            [tech.v3.dataset.categorical :as dscat]
-            [scicloj.metamorph.ml.toydata :as data]
-            [tech.v3.dataset.column-filters :as ds-cf]
-            [scicloj.metamorph.core :as mm]
-            [scicloj.metamorph.ml.loss :as loss]
-            [tablecloth.api :as tc]
-            [clojure.test :as t]
-            [tech.v3.dataset.categorical :as ds-cat]
-            [tech.v3.dataset.modelling :as ds-mod]
-            [tech.v3.dataset.categorical :as categorical]
-            [tech.v3.datatype :as dt]))
-
+  (:require
+   [clojure.test :as t]
+   [scicloj.metamorph.core :as mm]
+   [scicloj.metamorph.ml :as ml]
+   [scicloj.metamorph.ml.loss :as loss]
+   [scicloj.metamorph.ml.toydata :as data]
+   [scicloj.ml.tribuo]
+   [tablecloth.api :as tc]
+   [tech.v3.dataset :as ds]
+   [tech.v3.dataset.categorical :as dscat]
+   [tech.v3.dataset.column-filters :as ds-cf]
+   [tech.v3.dataset.modelling :as ds-mod]))
 
 (def iris-target-raw
   (->>
@@ -52,7 +48,7 @@
    (ds-mod/set-inference-target :species)))
 
 (defn- validate [ds expected-target-val expected-accuracy]
-  (let [split (dsmod/train-test-split ds {:seed 123})
+  (let [split (ds-mod/train-test-split ds {:seed 123})
 
         model (ml/train (:train-ds split)
                         {:model-type :scicloj.ml.tribuo/classification

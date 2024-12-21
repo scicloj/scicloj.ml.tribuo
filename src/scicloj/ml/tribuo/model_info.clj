@@ -37,7 +37,7 @@
    (map (fn [field-info]
           {:name  (.name field-info)
            :description (.description field-info)
-           :type (.getGenericType (.field field-info))
+           :type (str (.getGenericType (.field field-info)))
            :default (.defaultVal field-info)}))))
 
 

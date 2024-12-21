@@ -53,6 +53,10 @@
       (ds/assoc-metadata [:prediction] :column-type :prediction)
       (ds/rename-columns {:prediction target-column-name})))
 
+(defn model->byte-array [model-instance]
+  (let [out (java.io.ByteArrayOutputStream.)]
+    (.serializeToStream model-instance out)
+    (.toByteArray out)))
 
 
 (defn- train-classification [feature-ds target-ds options]
@@ -60,21 +64,24 @@
     ;;          (map meta (-> target-ds vals))
     ;;          :data
     ;;          (map #(take 5 %) (vals target-ds)))
-  (let [target-data-type (-> target-ds ds/columns first meta :datatype)]
+  (let [target-data-type (-> target-ds ds/columns first meta :datatype)
 
-    (when (= :object target-data-type)
-      (errors/throwf ":object target column not supported"))
+        _ (when (= :object target-data-type)
+            (errors/throwf ":object target column not supported"))
 
-    {:model-instance
-     (tribuo/train-classification (make-trainer options)
-                                  (ds/append-columns feature-ds (ds/columns target-ds)))}))
+        model-instance
+        (tribuo/train-classification (make-trainer options)
+                                     (ds/append-columns feature-ds (ds/columns target-ds)))]
+
+    {:model-as-bytes
+     (model->byte-array model-instance)}))
 
 (defn predict-classification [feature-ds thawed-model {:keys [model-data
-                                     target-columns
-                                     target-categorical-maps
-                                     target-datatypes] :as model}]
+                                                              target-columns
+                                                              target-categorical-maps
+                                                              target-datatypes] :as model}]
 
-  (let [model-instance (:model-instance model-data)
+  (let [model-instance thawed-model
         target-column-name (first target-columns)
         prediction
         (->
@@ -84,14 +91,17 @@
     (ds/assoc-metadata prediction [target-column-name] :categorical-map (get target-categorical-maps target-column-name))))
 
 
+(defn- thaw
+  [model-data]
+  (org.tribuo.Model/deserializeFromStream (java.io.ByteArrayInputStream. (:model-as-bytes model-data))))
+
 
 
 (defn evaluate [model]
-  (let [
-        feature-ds (-> model :model-data :feature-ds)
+  (let [feature-ds (-> model :model-data :feature-ds)
         target-ds (-> model :model-data :target-ds)
 
-        model-object (-> model :model-data :model)
+        model-object (-> model :model-data thaw)
         evaluator (RegressionEvaluator.)
         evaluation
         (.evaluate evaluator model-object (tribuo/make-regression-datasource
@@ -111,9 +121,7 @@
 
 (defn glance-fn-regression [model]
 
-  (let [
-
-        target-ds (-> model :model-data :target-ds)
+  (let [target-ds (-> model :model-data :target-ds)
         target-column-names (ds-mod/inference-target-column-names target-ds)
         _ (assert (< (count  target-column-names) 2) "Can only handle single inference target")
 
@@ -127,7 +135,7 @@
         target-column-names (ds-mod/inference-target-column-names target-ds)
         regressor-name (name (first target-column-names))
         regressor (Regressor. regressor-name, Double/NaN)]
-        
+
 
 
     (ds/->dataset
@@ -156,33 +164,36 @@
 
 
 (defn- train-regression [feature-ds target-ds options]
-  {:target-ds target-ds
-   :feature-ds feature-ds
-   :model
-   (tribuo/train-regression (make-trainer options) (ds/append-columns feature-ds (ds/columns target-ds)))})
+  (let [model-instance (tribuo/train-regression (make-trainer options)
+                                                (ds/append-columns feature-ds (ds/columns target-ds)))]
+
+    {:target-ds target-ds
+     :feature-ds feature-ds
+     :model-as-bytes
+     (model->byte-array model-instance)}))
 
 (defn- predict-regression [feature-ds thawed-model {:keys [model-data target-columns]}]
-  (let [model (:model model-data)]
+  (let [model thawed-model]
     (->
      (tribuo/predict-regression model feature-ds)
      (post-process-prediction-regression (first target-columns)))))
+
+
 
 (ml/define-model! :scicloj.ml.tribuo/regression
   train-regression
   predict-regression
   {:glance-fn glance-fn-regression
-   :augment-fn augment-fn-regression})
+   :augment-fn augment-fn-regression
+   :thaw-fn thaw})
 
 
-(ml/define-model! :scicloj.ml.tribuo/classification
-  train-classification
-  predict-classification
-  {})
 
 (ml/define-model! :scicloj.ml.tribuo/classification
   train-classification
   predict-classification
-  {})
+  {:thaw-fn thaw})
+
 
 
 ;(model-info/register-models train-classification predict-classification train-regression predict-regression)
