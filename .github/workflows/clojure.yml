@@ -49,12 +49,6 @@ jobs:
           # key: cljdeps-${{ hashFiles('build.boot') }}
           restore-keys: cljdeps-
 
-        
-      - name: Get clj-kondo version
-        run: clj-kondo --version
-
-      - name: Get cljfmt version
-        run: cljfmt --version
 
       - uses: actions/checkout@v3
           

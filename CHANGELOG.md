@@ -2,7 +2,7 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## 0.1.5
-- added support for "thak" of model, so serialisation
+- added support for "thaw" of model, so serialisation
 
 ## 0.1.4
 - support "all types" for classification target column
