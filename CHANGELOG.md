@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## 0.1.6
+- fixed #7 disease-progression ?
+
 ## 0.1.5
 - added support for "thaw" of model, so serialisation
 

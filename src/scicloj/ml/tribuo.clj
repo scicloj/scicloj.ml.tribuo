@@ -129,7 +129,7 @@
         predictions (->predictions evaluation)
 
 
-        regressor-values (-> target-ds :disease-progression)
+        regressor-values (-> target-ds (get (first target-column-names)))
         prediction-values (map :prediction predictions)
 
         target-column-names (ds-mod/inference-target-column-names target-ds)
