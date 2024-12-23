@@ -257,6 +257,22 @@
                                 :evaluation-handler-fn
                                 (fn [eval-result]
                                   eval-result)})]
+
+    (t/is (= "org.tribuo.common.tree.TreeModel"
+             (->
+              evaluations flatten first  :fit-ctx  :model :model-data :model-as-bytes
+              (java.io.ByteArrayInputStream.)
+              (org.tribuo.Model/deserializeFromStream)
+              class
+              .getName)))
+    
+    (t/is (= "org.tribuo.common.tree.TreeModel"
+             (->
+              evaluations flatten first  :fit-ctx  :model
+              (ml/thaw-model)
+              class
+              .getName)))
+    
     (t/is (= 0.8048780487804879
              (->> evaluations
                   flatten
