@@ -2,12 +2,12 @@
  :deps {org.clojure/clojure                     {:mvn/version "1.12.0"}
         org.scicloj/metamorph.ml                {:mvn/version "0.10.4"}
         cheshire/cheshire                       {:mvn/version "5.13.0"}
-        techascent/tech.ml.dataset              {:mvn/version "7.034"}
+        techascent/tech.ml.dataset              {:mvn/version "7.035"}
         ;; tribuo core deps
         org.tribuo/tribuo-classification-core   {:mvn/version "4.3.1"}
         org.tribuo/tribuo-regression-core       {:mvn/version "4.3.1"}
-        com.oracle.labs.olcut/olcut-core        {:mvn/version "5.2.0"}
-        com.oracle.labs.olcut/olcut-config-json {:mvn/version "5.2.0"}}
+        com.oracle.labs.olcut/olcut-core        {:mvn/version "5.3.1"}
+        com.oracle.labs.olcut/olcut-config-json {:mvn/version "5.3.1"}}
 
  :aliases
  {:test
@@ -21,6 +21,9 @@
 
 
   :build {:deps {io.github.clojure/tools.build
-                 {:mvn/version "0.9.6"}
-                 slipset/deps-deploy {:mvn/version "0.2.0"}}
-          :ns-default build}}}
+                 {:mvn/version "0.10.6"}
+                 slipset/deps-deploy {:mvn/version "0.2.2"}}
+          :ns-default build}
+  :outdated {;; Note that it is `:deps`, not `:extra-deps`
+             :deps {com.github.liquidz/antq {:mvn/version "RELEASE"}}
+             :main-opts ["-m" "antq.core"]}}}

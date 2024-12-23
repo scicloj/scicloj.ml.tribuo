@@ -19,20 +19,20 @@ jobs:
       # It is important to install java before installing clojure tools which needs java
       # exclusions: babashka, clj-kondo and cljstyle
       - name: Prepare java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4.6.0
         with:
           distribution: 'zulu'
           java-version: '8'
 
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@12.3
+        uses: DeLaGuardo/setup-clojure@13.1
         with:
           # Install just one or all simultaneously
           # The value must indicate a particular version of the tool, or use 'latest'
           # to always provision the latest version
-          cli: 1.11.1.1435             # Clojure CLI based on tools.deps
-          clj-kondo: 2022.05.31        # Clj-kondo
-          cljfmt: 0.10.2               # cljfmt
+          cli: 1.12.0.1488             # Clojure CLI based on tools.deps
+          clj-kondo: 2024.11.14        # Clj-kondo
+          cljfmt: 0.13.0               # cljfmt
 
       # Optional step:
       - name: Cache clojure dependencies
@@ -49,8 +49,6 @@ jobs:
           # key: cljdeps-${{ hashFiles('build.boot') }}
           restore-keys: cljdeps-
 
-      - name: Execute clojure code
-        run: clojure -e "(+ 1 1)"
         
       - name: Get clj-kondo version
         run: clj-kondo --version
