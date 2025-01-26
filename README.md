@@ -10,6 +10,11 @@ Integration of [tribuo](https://tribuo.org) ML library into the scicloj.ml / met
 ## Usage
 
 All models of tribuo are supported out of the box, via a configuration map. See tribuo website for details.
+The configuration map can be given as a map-of-maps as seend below.
+
+**Be aware** that all values in the map need to be "string", not numeric. Keys of the map can be string or keyword
+
+
 Tribuos distributes its models in different jars. When using a certain model, you need to add therefore the correct maven dependency which contains
 the model you want to use. This [table](https://github.com/oracle/tribuo/blob/main/docs/PackageOverview.md) contains an overview which model is in which maven artifcat. See the `test` alias [here](https://github.com/scicloj/scicloj.ml.tribuo/blob/2744f3ffff2f90ce7464f8f3850a0714b952fa5d/deps.edn#L19) wich does this setup.
 
@@ -33,22 +38,26 @@ train / predict:
 (def model (ml/train (:train-ds split)
                         {:model-type :scicloj.ml.tribuo/classification
                          :tribuo-components [{:name "trainer"
-                                              :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
+                                              :type "org.tribuo.classification.dtree.CARTClassificationTrainer"
+                                               :properties { "maxDepth"  "6"
+                                                             :seed       "12345" }}]
                          :tribuo-trainer-name "trainer"}))
 (def prediction (ml/predict (:test-ds split) model))
 ```
 
-the same as above , using a metamorh pipeline which can encapsulate the state (= the trained model in this case)
+the same as above , using a metamorph pipeline which can encapsulate the state (= the trained model in this case)
 
 ``` clojure
 ;;  the same using metamorh pipelines
 
-(require '[scicloj.metamorph.core :as mm]')
+(require '[scicloj.metamorph.core :as mm])
 (def cart-pipeline
   (mm/pipeline
    (ml/model {:model-type :scicloj.ml.tribuo/classification
               :tribuo-components [{:name "trainer"
-                                   :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
+                                   :type "org.tribuo.classification.dtree.CARTClassificationTrainer"
+                                   :properties { "maxDepth"  "6"
+                                                 :seed       "12345" }}]
               :tribuo-trainer-name "trainer"})))
 
 
