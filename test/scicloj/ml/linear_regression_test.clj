@@ -57,24 +57,38 @@
             (ds/rows))))))
 
 
+(def model-specs
 
-(comment
+  [{:model-type :scicloj.ml.tribuo/regression
+    :tribuo-components [{:name "squaredloss"
+                         :type "org.tribuo.regression.sgd.objectives.SquaredLoss"}
+                        {:name "trainer"
+                         :type "org.tribuo.regression.sgd.linear.LinearSGDTrainer"
+                         :properties  {:epochs "100"
+                                       :minibatchSize "1"
+                                       :objective "squaredloss"}}]
+    :tribuo-trainer-name "trainer"}
 
-  (ml/train
-   diabetes
-   {:model-type :scicloj.ml.tribuo/regression.linear-sgd
-  ;; trainer options
-    :epochs 100
-    :minibatchSize 1})
 
+   {:model-type :scicloj.ml.tribuo/regression
+    :tribuo-components [{:name "huber"
+                         :type "org.tribuo.regression.sgd.objectives.Huber"
+                         :properties {:cost "10"}}
+                        {:name "adagrad"
+                         :type "org.tribuo.math.optimisers.AdaGrad"
+                         :properties {:initialLearningRate "1.0"
+                                      :epsilon "1e-6"
+                                      :initialValue "0.0"}}
+                        {:name "trainer"
+                         :type "org.tribuo.regression.sgd.linear.LinearSGDTrainer"
+                         :properties  {:epochs "50"
+                                       :minibatchSize "1"
+                                       :optimiser "adagrad"
+                                       :objective "huber"}}]
+    :tribuo-trainer-name "trainer"}])
 
-  (ml/train
-   diabetes
-   {:model-type   :scicloj.ml.tribuo/regression.linear-sgd
-  ;; train options
-    :epochs 100
-    :minibatchSize 1
-    :objective "squared"
-  ;; other components and maybe options
-    :tribuo-components [{:name "squared"
-                         :type "org.tribuo.regression.sgd.objectives.SquaredLoss"}]}))
+(t/deftest test-two-specs
+  (ml/train diabetes (first model-specs))
+  (ml/train diabetes (second model-specs))
+  )
+
