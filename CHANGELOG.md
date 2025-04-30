@@ -1,6 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## unreleased
+- upgraded tribuo to 4.3.2
+- upgraded metamorph.ml to 1.2
+- upgraded TMD and cheshire to latest
+
 ## 0.2
 - upgraded to metamorph.ml 1.0
 

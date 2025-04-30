@@ -83,8 +83,9 @@
                           :versicolor 1
                           :virginica 2})
     nil)
-   1
+   2
    0.94)
+  
   (validate
    (make-iris-ds
     (make-species-column :float32
@@ -94,7 +95,7 @@
                           :versicolor 1.0
                           :virginica 2.0})
     nil)
-   1.0
+   2.0
    0.94)
 
   (validate
@@ -107,7 +108,7 @@
                           :versicolor :versicolor
                           :virginica :virginica})
     :float64)
-   0.0
+   2.0
    0.94)
 
   (validate
@@ -119,7 +120,7 @@
                           :versicolor "1"
                           :virginica "2"})
     :float64)
-   1.0
+   2.0
    0.94)
 
   (validate
@@ -131,7 +132,7 @@
                           :versicolor "1"
                           :virginica "2"})
     nil)
-   "1"
+   "2"
    0.94)
 
   (validate
@@ -143,7 +144,7 @@
                           :versicolor "12"
                           :virginica "2"})
     nil)
-   "12"
+   "2"
    0.94)
 
 
@@ -158,7 +159,7 @@
                           :versicolor :versicolor
                           :virginica :virginica})
     :int32)
-   0
+   2
    0.94)
 
   (validate
@@ -170,7 +171,7 @@
                           :versicolor :versicolor
                           :virginica :virginica})
     :float32)
-   0.0
+   2.0
    0.94)
 
   (validate
@@ -182,7 +183,7 @@
                           :versicolor :versicolor
                           :virginica :virginica})
     nil)
-   :versicolor
+   :virginica
    0.94)
 
   (validate
@@ -194,7 +195,7 @@
                           :versicolor "versicolor"
                           :virginica "virginica"})
     nil)
-   "versicolor"
+   "virginica"
    0.94)
 
   (validate
