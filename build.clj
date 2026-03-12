@@ -70,8 +70,8 @@
   opts)
 
 (defn generate-pom [_]
+  (println "Generate pom.xml...")
   (b/write-pom {:class-dir class-dir
-                :target "."
                 :lib lib
                 :version version
                 :basis basis
