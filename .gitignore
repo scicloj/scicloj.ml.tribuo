@@ -4,5 +4,5 @@
 /.Rprofile
 /.nrepl-port
 /target/
-.calva/output-window/output.calva-repl
+.calva
 .dir-locals.el
