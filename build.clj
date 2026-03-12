@@ -5,6 +5,7 @@
 
 (def lib 'org.scicloj/scicloj.ml.tribuo)
 (def version "0.2")
+(def basis (b/create-basis {:project "deps.edn"}))
 #_ ; alternatively, use MAJOR.MINOR.COMMITS:
 (def version (format "1.0.%s" (b/git-count-revs nil)))
 (def class-dir "target/classes")
@@ -67,3 +68,12 @@
     (dd/deploy {:installer :remote :artifact (b/resolve-path jar-file)
                 :pom-file (b/pom-path (select-keys opts [:lib :class-dir]))}))
   opts)
+
+(defn generate-pom [_]
+  (b/write-pom {:class-dir class-dir
+                :target "."
+                :lib lib
+                :version version
+                :basis basis
+                :pom-data (pom-template version)
+                :src-dirs ["src"]}))
