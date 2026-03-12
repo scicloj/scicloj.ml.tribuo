@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4.6.0
         with:
           distribution: 'zulu'
-          java-version: '8'
+          java-version: '21'
 
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@13.1
@@ -33,22 +33,6 @@ jobs:
           cli: 1.12.0.1488             # Clojure CLI based on tools.deps
           clj-kondo: 2024.11.14        # Clj-kondo
           cljfmt: 0.13.0               # cljfmt
-
-      # Optional step:
-      - name: Cache clojure dependencies
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.m2/repository
-            ~/.gitlibs
-            ~/.deps.clj
-          # List all files containing dependencies:
-          key: cljdeps-${{ hashFiles('deps.edn') }}
-          # key: cljdeps-${{ hashFiles('deps.edn', 'bb.edn') }}
-          # key: cljdeps-${{ hashFiles('project.clj') }}
-          # key: cljdeps-${{ hashFiles('build.boot') }}
-          restore-keys: cljdeps-
-
 
       - uses: actions/checkout@v3
           
