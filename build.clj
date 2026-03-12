@@ -4,7 +4,7 @@
             [deps-deploy.deps-deploy :as dd]))
 
 (def lib 'org.scicloj/scicloj.ml.tribuo)
-(def version "0.2")
+(def version "0.3")
 (def basis (b/create-basis {:project "deps.edn"}))
 #_ ; alternatively, use MAJOR.MINOR.COMMITS:
 (def version (format "1.0.%s" (b/git-count-revs nil)))
