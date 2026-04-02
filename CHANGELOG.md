@@ -1,6 +1,9 @@
 # Change Log
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
+## 0.3.1
+- upgraded metamorph.ml to 1.3.2 (and TC/TMD to 8.0.16)
+
 ## 0.3
 - upgraded tribuo to 4.3.2
 - upgraded metamorph.ml to 1.3.0
