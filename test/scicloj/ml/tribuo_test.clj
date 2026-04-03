@@ -9,8 +9,9 @@
    [tablecloth.api :as tc]
    [tech.v3.dataset :as ds]
    [tech.v3.dataset.categorical :as dscat]
-   [tech.v3.dataset.column-filters :as ds-cf]
-   [tech.v3.dataset.modelling :as ds-mod]))
+   [tech.v3.dataset.modelling :as ds-mod]
+   [tech.v3.dataset.column-filters :as cf]))
+
 
 (def iris-target-raw
   (->>
@@ -46,13 +47,14 @@
    (ds-mod/set-inference-target :species)))
 
 (defn- validate [ds expected-target-val expected-accuracy]
-  (let [split (ds-mod/train-test-split ds {:seed 123})
+  (let [options {:model-type :scicloj.ml.tribuo/classification
+                 :tribuo-components [{:name "trainer"
+                                      :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
+                 :tribuo-trainer-name "trainer"}
 
-        model (ml/train (:train-ds split)
-                        {:model-type :scicloj.ml.tribuo/classification
-                         :tribuo-components [{:name "trainer"
-                                              :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
-                         :tribuo-trainer-name "trainer"})
+        split (ds-mod/train-test-split ds {:seed 123})
+
+        model (ml/train (:train-ds split) options)
         predictions (->  (ml/predict (:test-ds split) model))
 
         accuracy (loss/classification-accuracy (-> split :test-ds
@@ -60,14 +62,17 @@
                                                    :species)
                                                (-> predictions
                                                    dscat/reverse-map-categorical-xforms
-                                                   :species))]
+                                                   :species))
+        score-fn (:score-fn (ml/options->model-def options))
+        score (score-fn model (:test-ds split))]
 
 
+    (t/is (< expected-accuracy score))
     (t/is (< expected-accuracy accuracy))
     (t/is (= expected-target-val
              (->
               predictions
-              (ds-cf/prediction)
+              (cf/prediction)
               ds/columns
               first
               first)))))
@@ -85,7 +90,7 @@
     nil)
    2
    0.94)
-  
+
   (validate
    (make-iris-ds
     (make-species-column :float32
@@ -97,6 +102,20 @@
     nil)
    2.0
    0.94)
+
+  (validate
+   (make-iris-ds
+    (make-species-column :float32
+                         true ;categorical?
+                         true ;inference-target? 
+                         {:setosa 0.0
+                          :versicolor 1.0
+                          :virginica 2.0})
+    nil)
+   2.0
+   0.94)
+
+
 
   (validate
 
@@ -225,25 +244,26 @@
                   "12"
                   0.94))))
 
-(ds/new-column :x [:a :b :c])
 
 (defn- verify-evaluate [ds]
-  (let [make-pipefn (fn  [opts]
+  (let [options
+        {:model-type :scicloj.ml.tribuo/classification
+         :tribuo-components [{:name "trainer"
+                              :type "org.tribuo.classification.dtree.CARTClassificationTrainer"
+                              :properties {:maxDepth "8"}}]
+
+
+
+         :tribuo-trainer-name "trainer"}
+        make-pipefn (fn []
                       (mm/pipeline
                        {:metamorph/id  :model}
-                       (ml/model {:model-type :scicloj.ml.tribuo/classification
-                                  :tribuo-components [{:name "trainer"
-                                                       :type "org.tribuo.classification.dtree.CARTClassificationTrainer"
-                                                       :properties {:maxDepth "8"}}]
-
-
-
-                                  :tribuo-trainer-name "trainer"})))
+                       (ml/model options)))
 
         splits
         (tc/split->seq ds :kfold {:seed 1234})
 
-        pipefns [(make-pipefn {})]
+        pipefns [(make-pipefn)]
 
         evaluations
         (ml/evaluate-pipelines pipefns splits
@@ -254,7 +274,8 @@
                                 :return-best-pipeline-only true
                                 :evaluation-handler-fn
                                 (fn [eval-result]
-                                  eval-result)})]
+                                  eval-result)})
+        ]
 
     (t/is (= "org.tribuo.common.tree.TreeModel"
              (->
@@ -286,25 +307,25 @@
 
 (defn- validate-target-symetry [datatype]
   (t/is (= datatype
-         (->>
-          (ml/train
-           (-> (ds/->dataset {:x [1 2 3 4]
-                              :y [:a :b :c :d]})
-               (ds/categorical->number [:y] [] datatype)
-               (ds-mod/set-inference-target [:y]))
-           {:model-type :scicloj.ml.tribuo/classification
-            :tribuo-components [{:name "trainer"
-                                 :type "org.tribuo.classification.dtree.CARTClassificationTrainer"
-                                 :properties {:maxDepth "8"}}]
-            :tribuo-trainer-name "trainer"})
-          (ml/predict
-           (-> (ds/->dataset {:x [1 2 3 4]})))
-          :y
-          meta
-          :datatype))))
+           (->>
+            (ml/train
+             (-> (ds/->dataset {:x [1 2 3 4]
+                                :y [:a :b :c :d]})
+                 (ds/categorical->number [:y] [] datatype)
+                 (ds-mod/set-inference-target [:y]))
+             {:model-type :scicloj.ml.tribuo/classification
+              :tribuo-components [{:name "trainer"
+                                   :type "org.tribuo.classification.dtree.CARTClassificationTrainer"
+                                   :properties {:maxDepth "8"}}]
+              :tribuo-trainer-name "trainer"})
+            (ml/predict
+             (-> (ds/->dataset {:x [1 2 3 4]})))
+            :y
+            meta
+            :datatype))))
 
 
-(t/deftest validate-target-sym 
+(t/deftest validate-target-sym
   (validate-target-symetry :int8)
   (validate-target-symetry :int16)
   (validate-target-symetry :int32)
@@ -313,7 +334,35 @@
   (validate-target-symetry :float64))
 
 
+(t/deftest xxx
+  (let [iris
+        (make-iris-ds
+         (make-species-column :int32
+                              true ;categorical?
+                              true ;inference-target? 
+                              {:setosa :setosa
+                               :versicolor :versicolor
+                               :virginica :virginica})
+         :int)
+        split (ds-mod/train-test-split iris {:seed 123})
+        options {:model-type :scicloj.ml.tribuo/classification
+                 :tribuo-components [{:name "trainer"
+                                      :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
+                 :tribuo-trainer-name "trainer"}
+        model (ml/train (:train-ds split)
+                        options)
+
+        p (ml/predict (:test-ds split) model)]
+    (t/is (= (-> p cf/prediction ds/column-names) [:species]))
+    (t/is (= (-> p cf/probability-distribution ds/column-names) ["virginica" "setosa" "versicolor"]))
+
+    (t/is (.equals
+           {:name :species,
+            :datatype :int32,
+            :n-elems 45,
+            :column-type :prediction,
+            :categorical-map {:lookup-table {:versicolor 0, :setosa 1, :virginica 2}, :src-column :species, :result-datatype :int}}
+           (-> p (cf/prediction) :species meta)))))
 
 
 
-           

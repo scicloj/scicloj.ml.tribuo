@@ -1,13 +1,16 @@
 (ns scicloj.ml.tribuo
   (:require
    [fastmath.stats :as stats]
+   [scicloj.metamorph.ml.loss :as loss]
    [scicloj.metamorph.ml :as ml]
    [tech.v3.dataset :as ds]
    [tech.v3.dataset.modelling :as ds-mod]
    [tech.v3.datatype :as dt]
    [tech.v3.datatype.errors :as errors]
    [tech.v3.datatype.functional :as fun]
-   [tech.v3.libs.tribuo :as tribuo])
+   [tech.v3.libs.tribuo :as tribuo]
+   [tech.v3.dataset.categorical :as dscat]
+   [tech.v3.dataset.column-filters :as cf])
   (:import
    [org.tribuo.regression Regressor]
    [org.tribuo.regression.evaluation RegressionEvaluator]))
@@ -45,8 +48,13 @@
         casted-ds (reduce-kv
                    (fn [m k v]
                      (cast-target m k v target-categorical-maps))
-                   renamed-ds target-datatypes)]
-    casted-ds))
+                   renamed-ds target-datatypes)
+        prob-column-names
+        (-> casted-ds
+            (ds/drop-columns [target-column-name])
+            (ds/column-names))]
+
+    (ds/assoc-metadata casted-ds prob-column-names :column-type :probability-distribution)))
 
 (defn- post-process-prediction-regression [ds target-column-name]
   (-> ds
@@ -178,6 +186,34 @@
      (tribuo/predict-regression model feature-ds)
      (post-process-prediction-regression (first target-columns)))))
 
+(defn- safety-first! [values-1 values-2]
+  (let [different-types
+        (into #{}
+              (concat (map type values-1)
+                      (map type values-2)))]
+    (assert (= 1 (count different-types))
+            (format "All values need to be of same type, but found: %s\nvalues-1: %s\nvalues-2: %s"
+                    different-types (frequencies values-1) (frequencies values-2)))))
+
+
+(defn- score 
+  ([model scoring-ds options]
+   (let [prediction (ml/predict (cf/feature scoring-ds) model)
+         trueth (cf/target scoring-ds)
+         prediction-values
+         (->
+          (cf/prediction prediction)
+          (dscat/reverse-map-categorical-xforms)
+          (get (-> model :target-columns first)))
+         trueth-values
+         (->
+          trueth
+          (dscat/reverse-map-categorical-xforms)
+          (get (-> model :target-columns first)))
+         _ (safety-first! prediction-values trueth-values)]
+     (loss/classification-accuracy prediction-values trueth-values)))
+  ([model scoring-ds](score model scoring-ds nil))
+  )
 
 
 (ml/define-model! :scicloj.ml.tribuo/regression
@@ -185,14 +221,18 @@
   predict-regression
   {:glance-fn glance-fn-regression
    :augment-fn augment-fn-regression
-   :thaw-fn thaw})
+   :thaw-fn thaw
+   
+   })
 
 
 
 (ml/define-model! :scicloj.ml.tribuo/classification
   train-classification
   predict-classification
-  {:thaw-fn thaw})
+  {:thaw-fn thaw
+   :score-fn score
+   })
 
 
 

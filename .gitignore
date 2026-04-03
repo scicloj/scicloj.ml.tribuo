@@ -6,3 +6,6 @@
 /target/
 .calva
 .dir-locals.el
+test/scicloj/ml/tribuo_test.clj
+pom.properties
+pom.xml
