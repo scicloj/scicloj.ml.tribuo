@@ -2,9 +2,12 @@
   (:require
    [clojure.test :as t :refer [is]]
    [scicloj.metamorph.ml :as ml]
+   [scicloj.metamorph.ml.loss :as loss]
    [scicloj.metamorph.ml.toydata :as toydata]
    [scicloj.ml.tribuo]
-   [tech.v3.dataset :as ds]))
+   [tech.v3.dataset :as ds]
+   [tech.v3.dataset.column-filters :as cf]
+   [tech.v3.libs.tribuo :as tribuo]))
 
 (def diabetes
 
@@ -33,13 +36,13 @@
             (ml/predict (ds/head diabetes) tribuo-linear-sdg))))
     
     
-    (t/is (=
+    (is (=
            (ds/rows
             (ml/glance tribuo-linear-sdg))
            [{:r.squared 0.2970733043591943 :mae 54.83060340549487 :rmse 64.56217465447965 :rss 1842377.2830830663}]))
 
 
-    (t/is (=
+    (is (=
            [{:age 0.0380759064334241 :sex 0.0506801187398187 :bmi 0.0616962065186885 :bp 0.0218723549949558 :s1 -0.0442234984244464 :s2 -0.0348207628376986 :s3 -0.0434008456520269 :s4 -0.00259226199818282 :s5 0.0199084208763183 :s6 -0.0176461251598052 :disease-progression 151 :.fitted 163.65426518599335 :.resid -12.654265185993353}
             {:age -0.00188201652779104 :sex -0.044641636506989 :bmi -0.0514740612388061 :bp -0.0263278347173518 :s1 -0.00844872411121698 :s2 -0.019163339748222 :s3 0.0744115640787594 :s4 -0.0394933828740919 :s5 -0.0683297436244215 :s6 -0.09220404962683 :disease-progression 75 :.fitted 113.19672792128675 :.resid -38.19672792128675}
             {:age 0.0852989062966783 :sex 0.0506801187398187 :bmi 0.0444512133365941 :bp -0.00567061055493425 :s1 -0.0455994512826475 :s2 -0.0341944659141195 :s3 -0.0323559322397657 :s4 -0.00259226199818282 :s5 0.00286377051894013 :s6 -0.0259303389894746 :disease-progression 141 :.fitted 156.74746391022254 :.resid -15.747463910222535}
@@ -91,4 +94,46 @@
   (ml/train diabetes (first model-specs))
   (ml/train diabetes (second model-specs))
   )
+
+
+(comment 
+
+  (def tribuo-linear-sdg
+    (ml/train
+     diabetes
+     {:model-type :scicloj.ml.tribuo/regression
+      :tribuo-components [{:name "squared"
+                           :type "org.tribuo.regression.sgd.objectives.SquaredLoss"}
+                          {:name "trainer"
+                           :type "org.tribuo.regression.sgd.linear.LinearSGDTrainer"
+                           :properties  {:epochs "100"
+                                         :minibatchSize "1"
+                                         :objective "squared"}}]
+      :tribuo-trainer-name "trainer"}))
+  
+
+
+  (def prediction (ml/predict diabetes tribuo-linear-sdg))
+  
+
+
+;1. classical
+  (loss/mae (:disease-progression prediction) 
+            (:disease-progression (cf/target diabetes)))
+  ;;=> 54.83060340549487
+  
+
+
+;2. use standardized
+  (def standardised
+    ((:pre-metric-standarisation-fn
+      (ml/options->model-def {:model-type :scicloj.ml.tribuo/regression}))
+     prediction
+     diabetes :continous))
+  (loss/mae (:prediction standardised) (:trueth standardised))
+;;=> 54.83060340549487  
+  
+  
+  )
+
 

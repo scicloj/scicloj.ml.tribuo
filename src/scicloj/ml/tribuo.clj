@@ -275,7 +275,7 @@
   {:glance-fn glance-fn-regression
    :augment-fn augment-fn-regression
    :thaw-fn thaw
-   
+   :pre-metric-standarisation-fn pre-metric-standardise
    })
 
 
