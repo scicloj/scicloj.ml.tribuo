@@ -4,6 +4,7 @@
    [scicloj.metamorph.ml.loss :as loss]
    [scicloj.metamorph.ml :as ml]
    [tech.v3.dataset :as ds]
+   [tech.v3.dataset.column :as ds-col]
    [tech.v3.dataset.modelling :as ds-mod]
    [tech.v3.datatype :as dt]
    [tech.v3.datatype.errors :as errors]
@@ -196,20 +197,72 @@
                     different-types (frequencies values-1) (frequencies values-2)))))
 
 
+
+(defn- do-harmonize [ds variable-type filter-fn]
+  (let [column (-> ds
+                   filter-fn
+                   (dscat/reverse-map-categorical-xforms)
+                   (ds/columns)
+                   first)]
+    (assert (some? column)
+            (format "No column found matching filter: %s\nmeta of ds columns: %s" 
+                    filter-fn 
+                    (mapv meta (ds/columns ds)))
+            )
+    (case variable-type
+      :discrete
+      (case (-> column meta :datatype)
+        :keyword (vec column)
+        :int64 (vec column)
+        :string (vec column)
+        :boolean (vec column)
+        :float64 (int-array column))
+
+      :continous (ds-col/to-double-array column)))
+  )
+
+
+
+(defn- do-harmonize-trueth [ds discrete-or-continous]
+  (do-harmonize ds discrete-or-continous cf/target))
+
+(defn- do-harmonize-prediction [ds discrete-or-continous]
+  (do-harmonize ds discrete-or-continous cf/prediction))
+
+
+(defn pre-metric-standardise 
+  "converts prediction result and the trueth into either
+   seq of 
+   :discrete     keyword,string,intXX,...
+   :continous   double, float
+   or fails.
+
+   `prediction-ds` and `thrueth-ds` are tabular data, 
+   usualy of type tech.v3.dataset
+
+   returns map of 
+   :prediction (seq)
+   :trueth     (seq)
+
+   I case of :discrete the discrete values in :predicion and :trueth
+   should have semantically identical meaning, as they might get
+   compared via '=' later
+   "
+  [prediction-ds trueth-ds discrete-or-continous]
+  
+  {:prediction (do-harmonize-prediction prediction-ds discrete-or-continous)
+   :trueth (do-harmonize-trueth trueth-ds discrete-or-continous)}
+  )
+
+
 (defn- score 
   ([model scoring-ds options]
+   ;; classificatioon only
    (let [prediction (ml/predict (cf/feature scoring-ds) model)
          trueth (cf/target scoring-ds)
-         prediction-values
-         (->
-          (cf/prediction prediction)
-          (dscat/reverse-map-categorical-xforms)
-          (get (-> model :target-columns first)))
-         trueth-values
-         (->
-          trueth
-          (dscat/reverse-map-categorical-xforms)
-          (get (-> model :target-columns first)))
+         standardised (pre-metric-standardise prediction trueth :discrete)
+         prediction-values (:prediction standardised)
+         trueth-values (:trueth standardised)
          _ (safety-first! prediction-values trueth-values)]
      (loss/classification-accuracy prediction-values trueth-values)))
   ([model scoring-ds](score model scoring-ds nil))
@@ -232,6 +285,7 @@
   predict-classification
   {:thaw-fn thaw
    :score-fn score
+   :pre-metric-standarisation-fn pre-metric-standardise
    })
 
 

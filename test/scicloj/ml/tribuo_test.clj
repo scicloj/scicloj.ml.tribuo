@@ -10,7 +10,8 @@
    [tech.v3.dataset :as ds]
    [tech.v3.dataset.categorical :as dscat]
    [tech.v3.dataset.modelling :as ds-mod]
-   [tech.v3.dataset.column-filters :as cf]))
+   [tech.v3.dataset.column-filters :as cf]
+   [tech.v3.libs.tribuo :as tribuo]))
 
 
 (def iris-target-raw
@@ -57,6 +58,10 @@
         model (ml/train (:train-ds split) options)
         predictions (->  (ml/predict (:test-ds split) model))
 
+        standardise-fn (:pre-metric-standarisation-fn (ml/options->model-def options))
+
+
+
         accuracy (loss/classification-accuracy (-> split :test-ds
                                                    dscat/reverse-map-categorical-xforms
                                                    :species)
@@ -64,9 +69,13 @@
                                                    dscat/reverse-map-categorical-xforms
                                                    :species))
         score-fn (:score-fn (ml/options->model-def options))
-        score (score-fn model (:test-ds split))]
+        score (score-fn model (:test-ds split))
+        standardised (standardise-fn predictions (:test-ds split) :discrete)
+        accuracy-from-standardised (loss/classification-accuracy
+                                    (-> standardised :prediction)
+                                    (-> standardised :trueth))]
 
-
+    (t/is (< expected-accuracy accuracy-from-standardised))
     (t/is (< expected-accuracy score))
     (t/is (< expected-accuracy accuracy))
     (t/is (= expected-target-val
