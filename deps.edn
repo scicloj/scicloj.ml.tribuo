@@ -2,7 +2,7 @@
  :deps {org.clojure/clojure                     {:mvn/version "1.12.4"}
         org.scicloj/metamorph.ml
         {:git/url "https://github.com/scicloj/metamorph.ml"
-         :git/sha "2cac3eff15792462aaf07ebf34f758e694214d45"}
+         :git/sha "86f5c18b4c9eb12ca187eae275357db53155d88b"}
         ;{:mvn/version "1.3.2"}
 
         cheshire/cheshire                       {:mvn/version "6.1.0"}
@@ -20,6 +20,7 @@
                 same/ish                              {:mvn/version "0.1.7"}
                 ;;  the unit tests needs this
                 org.tribuo/tribuo-regression-sgd      {:mvn/version "4.3.2"}
+                org.tribuo/tribuo-classification-libsvm      {:mvn/version "4.3.2"}
                 org.tribuo/tribuo-classification-tree {:mvn/version "4.3.2"}}}
 
 

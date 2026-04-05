@@ -8,11 +8,9 @@
    [scicloj.ml.tribuo]
    [tablecloth.api :as tc]
    [tech.v3.dataset :as ds]
-   [tech.v3.dataset.categorical :as dscat]
-   [tech.v3.dataset.modelling :as ds-mod]
+   [tech.v3.dataset.categorical :as ds-cat]
    [tech.v3.dataset.column-filters :as cf]
-   [tech.v3.libs.tribuo :as tribuo]))
-
+   [tech.v3.dataset.modelling :as ds-mod]))
 
 (def iris-target-raw
   (->>
@@ -58,24 +56,19 @@
         model (ml/train (:train-ds split) options)
         predictions (->  (ml/predict (:test-ds split) model))
 
-        standardise-fn (:pre-metric-standarisation-fn (ml/options->model-def options))
-
-
 
         accuracy (loss/classification-accuracy (-> split :test-ds
-                                                   dscat/reverse-map-categorical-xforms
+                                                   ds-cat/reverse-map-categorical-xforms
                                                    :species)
                                                (-> predictions
-                                                   dscat/reverse-map-categorical-xforms
+                                                   ds-cat/reverse-map-categorical-xforms
                                                    :species))
-        score-fn (:score-fn (ml/options->model-def options))
-        score (score-fn model (:test-ds split))
-        standardised (standardise-fn predictions (:test-ds split) :discrete)
-        accuracy-from-standardised (loss/classification-accuracy
-                                    (-> standardised :prediction)
-                                    (-> standardised :trueth))]
+        score (ml/score model 
+                        (cf/prediction predictions)
+                        (cf/target (:test-ds split))
+                        loss/classification-accuracy
+                        )]
 
-    (t/is (< expected-accuracy accuracy-from-standardised))
     (t/is (< expected-accuracy score))
     (t/is (< expected-accuracy accuracy))
     (t/is (= expected-target-val
@@ -343,6 +336,7 @@
   (validate-target-symetry :float64))
 
 
+
 (t/deftest xxx
   (let [iris
         (make-iris-ds
@@ -355,15 +349,30 @@
          :int)
         split (ds-mod/train-test-split iris {:seed 123})
         options {:model-type :scicloj.ml.tribuo/classification
-                 :tribuo-components [{:name "trainer"
-                                      :type "org.tribuo.classification.dtree.CARTClassificationTrainer"}]
+                 :tribuo-components [{:name "nu"
+                                      :type "org.tribuo.classification.libsvm.SVMClassificationType"
+                                      :properties {:type "NU_SVC"}}
+                                     {:name "trainer"
+                                      :type "org.tribuo.classification.libsvm.LibSVMClassificationTrainer"
+                                      :properties {:svmType "nu"
+                                                   :probability "true"
+                                                   }}]
                  :tribuo-trainer-name "trainer"}
         model (ml/train (:train-ds split)
                         options)
 
-        p (ml/predict (:test-ds split) model)]
-    (t/is (= (-> p cf/prediction ds/column-names) [:species]))
-    (t/is (= (-> p cf/probability-distribution ds/column-names) ["virginica" "setosa" "versicolor"]))
+        prediction (ml/predict (:test-ds split) model)]
+    
+
+    (t/is (= 1.0
+             (ml/score model
+                       prediction
+                       (:test-ds split)
+                       loss/classification-accuracy)))
+
+
+    (t/is (= (-> prediction cf/prediction ds/column-names) [:species]))
+    (t/is (= (->> prediction cf/probability-distribution ds/column-names (into #{})) #{"virginica" "setosa" "versicolor"}))
 
     (t/is (.equals
            {:name :species,
@@ -371,8 +380,6 @@
             :n-elems 45,
             :column-type :prediction,
             :categorical-map {:lookup-table {:versicolor 0, :setosa 1, :virginica 2}, :src-column :species, :result-datatype :int}}
-           (-> p (cf/prediction) :species meta)))))
-
-
+           (-> prediction (cf/prediction) :species meta)))))
 
 

@@ -231,40 +231,21 @@
 
 
 (defn pre-metric-standardise 
-  "converts prediction result and the trueth into either
-   seq of 
-   :discrete     keyword,string,intXX,...
-   :continous   double, float
-   or fails.
-
-   `prediction-ds` and `thrueth-ds` are tabular data, 
-   usualy of type tech.v3.dataset
-
-   returns map of 
-   :prediction (seq)
-   :trueth     (seq)
-
-   I case of :discrete the discrete values in :predicion and :trueth
-   should have semantically identical meaning, as they might get
-   compared via '=' later
-   "
   [prediction-ds trueth-ds discrete-or-continous]
-  
   {:prediction (do-harmonize-prediction prediction-ds discrete-or-continous)
    :trueth (do-harmonize-trueth trueth-ds discrete-or-continous)}
   )
 
 
 (defn- score 
-  ([model scoring-ds options]
+  ([prediction-ds trueth-ds metric-fn]
    ;; classificatioon only
-   (let [prediction (ml/predict (cf/feature scoring-ds) model)
-         trueth (cf/target scoring-ds)
-         standardised (pre-metric-standardise prediction trueth :discrete)
+   (let [
+         standardised (pre-metric-standardise prediction-ds trueth-ds :discrete)
          prediction-values (:prediction standardised)
          trueth-values (:trueth standardised)
          _ (safety-first! prediction-values trueth-values)]
-     (loss/classification-accuracy prediction-values trueth-values)))
+     (metric-fn prediction-values trueth-values)))
   ([model scoring-ds](score model scoring-ds nil))
   )
 
@@ -275,7 +256,6 @@
   {:glance-fn glance-fn-regression
    :augment-fn augment-fn-regression
    :thaw-fn thaw
-   :pre-metric-standarisation-fn pre-metric-standardise
    })
 
 
@@ -285,7 +265,6 @@
   predict-classification
   {:thaw-fn thaw
    :score-fn score
-   :pre-metric-standarisation-fn pre-metric-standardise
    })
 
 
